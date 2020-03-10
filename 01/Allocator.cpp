@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Allocator.h"
+#include <exception>
 
 static size_t _Avail = 0;
 static size_t _Bigsize = 0;
@@ -11,11 +12,11 @@ void makeAllocator (size_t maxSize)
 
     if(_Start == nullptr)
         {
-        throw ("Memory allocation failed\n");
+        throw std::exception ();
         return;
         }
 
-    _Avail = maxSize;
+    _Avail   = maxSize;
     _Bigsize = maxSize;
     }
 
@@ -25,17 +26,17 @@ int* alloc (size_t size)
         {
         return nullptr;
         }
+
     else
         {
-        _Start = (int* )(_Start) + size;
+        _Start = (int*)(_Start) + size;
         _Avail -= size;
 
         return (int*)_Start;
         }
 
     return nullptr;
-  }
-
+    }
 
 void reset ()
     {

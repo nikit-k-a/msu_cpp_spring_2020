@@ -2,6 +2,8 @@
 #include "Allocator.h"
 #include "Allocator.cpp"
 
+#include <exception>
+
 int main ()
     {
     try
@@ -26,14 +28,14 @@ int main ()
         makeAllocator (SIZE_MAX);
         }
 
-    catch (const char* msg)
+    catch (std::exception &e)
         {
-        printf("%s\n", msg);
+        printf("Memory error\n");
         }
 
     catch (...)
         {
-        printf("Exception cathed\n");
+        printf("Unknown exception cathed\n");
         }
 
     return 0;
