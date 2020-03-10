@@ -1,13 +1,19 @@
 #include <iostream>
 #include "Allocator.h"
 
-static size_t _Avail;
-static size_t _Bigsize;
-static void* _Start;
+static size_t _Avail = 0;
+static size_t _Bigsize = 0;
+static void* _Start = nullptr;
 
 void makeAllocator (size_t maxSize)
     {
     _Start = malloc (maxSize);
+
+    if(_Start == nullptr)
+        {
+        throw ("Memory allocation failed\n");
+        return;
+        }
 
     _Avail = maxSize;
     _Bigsize = maxSize;

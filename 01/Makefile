@@ -17,4 +17,4 @@ test.o: test.cpp
 
 clean:
 	rm -rf *.o my_pr1
-    rm -rf *.o test
+	rm -rf *.o test

@@ -4,22 +4,37 @@
 
 int main ()
     {
-    makeAllocator (1024);
+    try
+        {
+        makeAllocator (1024);
 
-    int* p1 = alloc (500);
-    printf ("p1 = %p\n", p1);
+        int* p1 = alloc (500);
+        printf ("p1 = %p\n", p1);
 
 
-    int* p2 = alloc (500);
-    printf ("p2 = %p\n", p2);
+        int* p2 = alloc (500);
+        printf ("p2 = %p\n", p2);
 
-    ptrdiff_t dif = p2 - p1;
-    std::cout << dif <<"\n";
+        ptrdiff_t dif = p2 - p1;
+        std::cout << dif <<"\n";
 
-    reset ();
+        reset ();
 
-    int* p3 = alloc (500);
-    printf ("p3 = %p\n", p3);
+        int* p3 = alloc (500);
+        printf ("p3 = %p\n", p3);
+
+        makeAllocator (SIZE_MAX);
+        }
+
+    catch (const char* msg)
+        {
+        printf("%s\n", msg);
+        }
+
+    catch (...)
+        {
+        printf("Exception cathed\n");
+        }
 
     return 0;
     }
