@@ -30,12 +30,12 @@ int main ()
 
     catch (std::exception &e)
     {
-        printf("Memory error\n");
+        printf ("Memory error\n");
     }
 
     catch (...)
     {
-        printf("Unknown exception cathed\n");
+        printf ("Unknown exception cathed\n");
     }
 
     return 0;
