@@ -5,9 +5,9 @@
 #include <exception>
 
 int main ()
-    {
+{
     try
-        {
+    {
         makeAllocator (1024);
 
         int* p1 = alloc (500);
@@ -26,17 +26,17 @@ int main ()
         printf ("p3 = %p\n", p3);
 
         makeAllocator (SIZE_MAX);
-        }
+    }
 
     catch (std::exception &e)
-        {
+    {
         printf("Memory error\n");
-        }
+    }
 
     catch (...)
-        {
+    {
         printf("Unknown exception cathed\n");
-        }
+    }
 
     return 0;
-    }
+}
