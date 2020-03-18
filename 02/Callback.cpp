@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cstring> //for memcpy
 #include "Callback.h"
 
 OnNum Number  = nullptr;
