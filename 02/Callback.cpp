@@ -2,45 +2,35 @@
 #include <cstring> //for memcpy
 #include "Callback.h"
 
-OnToken Number = nullptr;
-OnToken Text   = nullptr;
-OnPoint Start  = nullptr;
-OnPoint End    = nullptr;
+OnNum Number  = nullptr;
+OnText Text   = nullptr;
+OnPoint Start = nullptr;
+OnPoint End   = nullptr;
 
-bool NumInit   = false;
-bool TextInit  = false;
-bool StartInit = false;
-bool EndInit   = false;
-
-void register_on_num_callback (OnToken callback)
+void register_on_num_callback (OnNum callback)
 {
     Number = callback;
-    NumInit = true;
 }
 
-void register_on_txt_callback (OnToken callback)
+void register_on_txt_callback (OnText callback)
 {
     Text = callback;
-    TextInit = true;
 }
 
 void register_on_end_callback (OnPoint callback)
 {
     End = callback;
-    EndInit = true;
 }
 
 void register_on_start_callback (OnPoint callback)
 {
     Start = callback;
-    StartInit = true;
 }
 
-bool parse (const char* txt)
+bool parse (const std::string & txt)
 {
-    if (!StartInit || !EndInit || !NumInit || !TextInit)
+    if (!Start || !End || !Number || !Text)
     {
-        std::cout << "All callbacks should be initialized. Parsing stopped. \n";
         return false;
     }
     Start ();
@@ -55,13 +45,9 @@ bool parse (const char* txt)
                 j++;
                 i++;
             }
-            char *tmp = (char*) malloc((j+1)*sizeof(char));
-            if (tmp == nullptr) return false;
             if ((i - j) < 0) return false;
-            std::memcpy( tmp, &txt[i-j], j*sizeof(char));
-            tmp[j] = '\0';
-            Number (tmp);
-            free (tmp);
+            std::string tmp = txt.substr(i-j, j);
+            Number (std::stoi(tmp));
             i--;
             continue;
         }
@@ -73,13 +59,9 @@ bool parse (const char* txt)
                 j++;
                 i++;
             }
-            char *tmp = (char*) malloc((j+1)*sizeof(char));
-            if (tmp == nullptr) return false;
             if ((i - j) < 0) return false;
-            std::memcpy( tmp, &txt[i-j], j*sizeof(char));
-            tmp[j] = '\0';
+            std::string tmp = txt.substr(i-j, j);
             Text (tmp);
-            free (tmp);
             i--;
             continue;
         }

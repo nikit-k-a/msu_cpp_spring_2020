@@ -1,17 +1,17 @@
 #include <iostream>
 #include "Callback.h"
 
-void onNumberFound (const char* num);
-void onTextFound   (const char* txt);
-void onStartFound ();
-void onEndFound   ();
+void onNumberFound (int num);
+void onTextFound   (const std::string & txt);
+void onStartFound  ();
+void onEndFound    ();
 
-void onNumberFound (const char* num)
+void onNumberFound (int num)
 {
 	std::cout << num << "\n";
 }
 
-void onTextFound (const char* txt)
+void onTextFound (const std::string & txt)
 {
     std::cout << txt << "\n";
 }
@@ -52,7 +52,7 @@ int main ()
     std::cout << "------------------------------" << '\n';
     state = parse ("123 abc 4567");
 	if (!state) std::cout << "parse error" << '\n';
-	
+
     std::cout << "---------end-of-tests---------" << '\n';
 
     return 0;
