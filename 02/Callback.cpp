@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring> //for memcpy
 #include "Callback.h"
 
 OnToken Number = nullptr;
@@ -6,78 +7,79 @@ OnToken Text   = nullptr;
 OnPoint Start  = nullptr;
 OnPoint End    = nullptr;
 
-bool isNum       (char letter);
-bool isSeparator (char letter);
-bool isTxt       (char letter);
+bool NumInit   = false;
+bool TextInit  = false;
+bool StartInit = false;
+bool EndInit   = false;
 
 void register_on_num_callback (OnToken callback)
 {
     Number = callback;
+    NumInit = true;
 }
 
 void register_on_txt_callback (OnToken callback)
 {
     Text = callback;
+    TextInit = true;
 }
 
 void register_on_end_callback (OnPoint callback)
 {
     End = callback;
+    EndInit = true;
 }
 
 void register_on_start_callback (OnPoint callback)
 {
     Start = callback;
+    StartInit = true;
 }
 
-bool isNum (char letter)
+bool parse (const char* txt)
 {
-    if (letter >= '0' && letter <= '9') return true;
-
-    return false;
-}
-
-bool isSeparator (char letter)
-{
-    if (letter == ' '  ||
-        letter == '\t' ||
-        letter == '\n'   ) return true;
-
-    return false;
-}
-bool isTxt (char letter)
-{
-    if ( (letter < '0' || letter > '9') &&
-         !isSeparator(letter)           &&
-         letter != '\0'                   ) return true;
-
-    return false;
-}
-
-void parse (const char* txt)
-{
-    if (!Start || !End || !Number || !Text)
+    if (!StartInit || !EndInit || !NumInit || !TextInit)
     {
         std::cout << "All callbacks should be initialized. Parsing stopped. \n";
-        return;
+        return false;
     }
     Start ();
-    for (int i = 0; txt [i] != '\0'; i++)
+    for (size_t i = 0; txt [i] != '\0'; i++)
     {
-        while (isSeparator (txt [i])) i++;
-        int j = 0;
-        char tmp [256] = {};
-        while (isNum (txt [i]) || isTxt (txt[i]))
+        while (std::isspace (txt [i])) i++;
+        size_t j = 0;
+        if(std::isdigit (txt [i]))
         {
-            tmp [j] = txt [i];
-            j++;
-            i++;
+            while (std::isdigit (txt [i]))
+            {
+                j++;
+                i++;
+            }
+            char tmp[j+1];
+            std::memcpy( tmp, &txt[i-j], j*sizeof(char));
+            tmp[j] = '\0';
+            Number (tmp);
+            i--;
+            continue;
         }
-        tmp [j] = '\0';
 
-        if(isNum (tmp [j-1])) Number (tmp);
-
-        if(isTxt (tmp [j-1])) Text (tmp);
+        if(std::isgraph (txt [i]))
+        {
+            while (std::isgraph (txt [i]))
+            {
+                j++;
+                i++;
+            }
+            char tmp[j+1];
+            if ((i - j) < 0) return false;
+            std::memcpy( tmp, &txt[i-j], j*sizeof(char));
+            tmp[j] = '\0';
+            Text (tmp);
+            i--;
+            continue;
+        }
     }
     End ();
+
+    return true;
 }

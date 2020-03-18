@@ -9,6 +9,6 @@ void register_on_txt_callback   (OnToken callback);
 void register_on_start_callback (OnPoint callback);
 void register_on_end_callback   (OnPoint callback);
 
-void parse (const char* txt);
+bool parse (const char* txt);
 
 #endif //CALLBACK_H

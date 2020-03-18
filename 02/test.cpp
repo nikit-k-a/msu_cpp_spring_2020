@@ -34,13 +34,14 @@ int main ()
     register_on_start_callback (onStartFound);
 
     std::cout << "-------start-of-tests---------" << '\n';
-    parse ("a \n b \t c");
+    bool state = parse ("a \n b \t c");
+	if (!state) std::cout << "parse error" << '\n';
 
     std::cout << "------------------------------" << '\n';
-    parse ("");
+    state = parse ("");
 
     std::cout << "------------------------------" << '\n';
-    parse ("1 243   23 13 js apkoerng");
+    parse ("1 243   23 13js apkoerng");
 
     std::cout << "------------------------------" << '\n';
     parse ("asdadasda");
