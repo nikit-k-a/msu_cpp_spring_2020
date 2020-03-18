@@ -39,15 +39,20 @@ int main ()
 
     std::cout << "------------------------------" << '\n';
     state = parse ("");
+	if (!state) std::cout << "parse error" << '\n';
 
     std::cout << "------------------------------" << '\n';
-    parse ("1 243   23 13js apkoerng");
+    state = parse ("1 243   23 13js apkoerng");
+	if (!state) std::cout << "parse error" << '\n';
 
     std::cout << "------------------------------" << '\n';
-    parse ("asdadasda");
+    state = parse ("asdadasda");
+	if (!state) std::cout << "parse error" << '\n';
 
     std::cout << "------------------------------" << '\n';
-    parse ("123 abc 4567");
+    state = parse ("123 abc 4567");
+	if (!state) std::cout << "parse error" << '\n';
+	
     std::cout << "---------end-of-tests---------" << '\n';
 
     return 0;

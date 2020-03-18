@@ -56,6 +56,7 @@ bool parse (const char* txt)
                 i++;
             }
             char tmp[j+1];
+            if ((i - j) < 0) return false;
             std::memcpy( tmp, &txt[i-j], j*sizeof(char));
             tmp[j] = '\0';
             Number (tmp);
