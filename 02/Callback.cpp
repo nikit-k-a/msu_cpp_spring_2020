@@ -55,27 +55,31 @@ bool parse (const char* txt)
                 j++;
                 i++;
             }
-            char tmp[j+1];
+            char *tmp = (char*) malloc((j+1)*sizeof(char));
+            if (tmp == nullptr) return false;
             if ((i - j) < 0) return false;
             std::memcpy( tmp, &txt[i-j], j*sizeof(char));
             tmp[j] = '\0';
             Number (tmp);
+            free (tmp);
             i--;
             continue;
         }
 
-        if(std::isgraph (txt [i]))
+        if(std::isalpha (txt [i]))
         {
-            while (std::isgraph (txt [i]))
+            while (std::isalpha (txt [i]))
             {
                 j++;
                 i++;
             }
-            char tmp[j+1];
+            char *tmp = (char*) malloc((j+1)*sizeof(char));
+            if (tmp == nullptr) return false;
             if ((i - j) < 0) return false;
             std::memcpy( tmp, &txt[i-j], j*sizeof(char));
             tmp[j] = '\0';
             Text (tmp);
+            free (tmp);
             i--;
             continue;
         }
