@@ -32,35 +32,63 @@ Matrix::~Matrix ()
     delete [] data_;
 }
 
-bool Matrix::operator == (Matrix& right) const
+Proxy::Proxy (const size_t len, int* subarr):
+    len_ (len),
+    subarr_ (subarr)
+    {}
+        
+int& Proxy::operator[] (const size_t index)
+{
+    if (index >= len_) throw std::out_of_range("");
+    return subarr_ [index];
+}
+
+const int& Proxy::operator[] (const size_t index) const
+{
+    if (index >= len_) throw std::out_of_range("");
+    return subarr_ [index];
+}
+
+bool Matrix::operator == (const Matrix& right) const
 {
     if (this == &right) return true;
 
-    if (right.cols_ != cols_ or A.rows_ != rows_) return false;
+    if ((right.cols_ != cols_) || (right.rows_ != rows_)) return false;
 
-    for (int i = 0; i < rows; i++)
+    for (int i = 0; i < rows_; i++)
     {
-        for (int j = 0; j < cols; j++)
+        for (int j = 0; j < cols_; j++)
         {
             if (data_[i][j] != right [i][j]) return false;
         }
     }
     return true;
 }
-
-bool Matrix::operator != (Matrix& right) const
+bool Matrix::operator != (const Matrix& right) const
 {
-    return !(*this == A);
+    return !(*this == right);
 }
 
-Matrix& Matrix::operator *= (const int num) const
+Matrix& Matrix::operator *= (const int num)
 {
-    for(int i = 0; i < rows; i++)
+    for(int i = 0; i < rows_; i++)
     {
-		for(int j = 0; j < columns; j++)
+		for(int j = 0; j < cols_; j++)
             {
-			matrix[i][j] *= num;
+			data_[i][j] *= num;
             }
     }
     return *this;
+}
+
+Proxy Matrix::operator[] (const size_t index)
+{
+    if (index >= rows_) throw std::out_of_range("");
+    return Proxy (cols_, data_ [index]);
+}
+
+const Proxy Matrix::operator[] (const size_t index) const
+{
+    if (index >= rows_) throw std::out_of_range("");
+    return Proxy (cols_, data_ [index]);
 }
