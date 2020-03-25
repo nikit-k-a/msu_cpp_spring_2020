@@ -5,7 +5,7 @@
 class Proxy
 {
     private:
-        const int len_;
+        const size_t len_;
         int* subarr_;
 
     public:
