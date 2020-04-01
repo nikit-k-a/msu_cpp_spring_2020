@@ -43,7 +43,7 @@ private:
 
     Error print (uint64_t val)
     {
-    out_ << std::boolalpha << val << Separator;
+    out_  << val << Separator;
     return Error::NoError;
     }
 
