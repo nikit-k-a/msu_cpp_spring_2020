@@ -43,8 +43,8 @@ private:
 
     Error print (uint64_t val)
     {
-    out_  << val << Separator;
-    return Error::NoError;
+        out_  << val << Separator;
+        return Error::NoError;
     }
 
     template <typename T>
