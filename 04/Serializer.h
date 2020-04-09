@@ -1,6 +1,5 @@
 #ifndef SERIALIZER_H
 #define SERIALIZER_H
-#pragma once
 
 enum class Error
 {
