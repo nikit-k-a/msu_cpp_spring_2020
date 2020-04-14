@@ -64,6 +64,11 @@ std::string format (const std::string& data, Args&&... args)
             }
         }
 
+        else if (data [i] == '}')
+        {
+            throw std::runtime_error ("Invalid syntax2");
+        }
+
         else
         {
             out += data [i];
