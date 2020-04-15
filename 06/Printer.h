@@ -4,65 +4,58 @@
 #include <string>
 #include <stdexcept>
 #include <sstream>
+#include <vector>
+#include <algorithm>
 
-std::string format (const std::string& str)
-{
-    return str;
-}
 
 template <typename T>
-void insert (std::string& str, T&& val)
+void process (std::vector <std::string>& str, T&& val)
 {
-    std::ostringstream buff;
-    buff << val;
-    str += buff.str();
-}
+    std::ostringstream os;
+    os << val;
 
-template <typename T>
-void process (std::string& str, int num, int count, T&& val)
-{
-    if (num == count)
-    {
-        insert (str, val);
-        return;
-    }
-    if (num > count)
-    {
-        throw std::runtime_error ("Parameter > qty of parameters");
-    }
+    str.push_back (os.str());
 }
 
 template <typename T, typename... Args>
-void process (std::string& str, int num, int count, T&& val, Args&&... args)
+void process (std::vector <std::string>& str, T&& val, Args&&... args)
 {
-    if (num == count)
-    {
-        insert (str, val);
-        return;
-    }
-    count++;
-    process (str, num, count, std::forward<Args>(args)...);
+    std::ostringstream os;
+    os << val;
+
+    str.push_back (os.str());
+
+    process (str, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
 std::string format (const std::string& data, Args&&... args)
 {
+    std::vector <std::string> param;
+    process (param, args...);
+
+    int qty = param.size();
     std::string out;
     for (int i = 0; i < data.size(); i++)
     {
         if (data[i] == '{')
         {
-            if (std::isdigit(data [i+1]) && data [i+2] == '}')
+            i++;
+            std::string index = "";
+            while(data[i] != '}')
             {
-                int num = data [i+1] - '0';
-                process (out, num, 0, args...);
-                i+=2;
+                index += data[i];
+                i++;
             }
-            else
-            {
-                throw std::runtime_error ("Invalid syntax");
+            if (index.empty()|| !std::all_of (index.begin (), index.end (), ::isdigit))
+                {
+                    throw std::runtime_error ("Invalid syntax");
+                }
+
+            int number = std::stoi (index);
+            if (number >= qty) throw std::runtime_error ("Invalid parameters number");
+            out += param [number];
             }
-        }
 
         else if (data [i] == '}')
         {
