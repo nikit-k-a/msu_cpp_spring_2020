@@ -280,8 +280,8 @@ class my_vector
             {
                 if (capacity_ < newSize) reserve (newSize);
                 for (size_type i = size_; i < newSize; i++)
-                {
-                alloc_.construct(data_+i, T());
+                {                
+                    alloc_.construct(data_+i, T());
                 }
             }
 
