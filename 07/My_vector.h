@@ -11,24 +11,17 @@ public:
     using pointer = T*;
     using size_type = size_t;
 
-    template <typename U>
-    struct rebind
-    {
-        using other = my_allocator<U>;
-    };
-
     pointer allocate(size_type count)
     {
-        if (count == 0) return nullptr;
+        if (count == 0) throw std::bad_alloc ();
         if (count > max_size()) throw std::bad_alloc ();
-        pointer ptr = (pointer) /*malloc*/  (:: operator new (sizeof (value_type)*count));
-        if (ptr == nullptr) throw std::bad_alloc ();//delete if new?
+        pointer ptr = (pointer)(:: operator new (sizeof (value_type)*count));
+        if (ptr == nullptr) throw std::bad_alloc ();
         return ptr;
     }
 
     void deallocate(pointer ptr, size_type count)
     {
-        // free (ptr);
         :: operator delete (ptr);
     }
 
@@ -64,7 +57,6 @@ class my_iterator: public std::iterator<std::random_access_iterator_tag, T>
         explicit my_iterator (pointer ptr):
             ptr_(ptr)
             {}
-
 
         my_iterator(const iterator& other):
             ptr_(other.ptr_)
@@ -289,7 +281,7 @@ class my_vector
                 if (capacity_ < newSize) reserve (newSize);
                 for (size_type i = size_; i < newSize; i++)
                 {
-                    alloc_.construct(data_+i, data_ [i]);
+                alloc_.construct(data_+i, T());
                 }
             }
 
