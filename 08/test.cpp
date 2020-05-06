@@ -22,7 +22,7 @@ int main ()
 	auto task2 = pool.exec([]() { return 10; });
 	assert (task2.get() == 10);
 
-    auto task3 = pool.exec(tester, 12);
+   	auto task3 = pool.exec(tester, 12);
 	assert (task3.get() == 0);
 
 	std::cout << "-----Tests--end-------\n";
