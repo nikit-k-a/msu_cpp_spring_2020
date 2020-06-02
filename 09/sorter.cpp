@@ -1,186 +1,155 @@
-#include <fstream>
 #include <iostream>
+#include "sorter.h"
 #include <vector>
 #include <algorithm>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include<exception>
-#include <iostream>
+#include <memory>
+#include <queue>
+//TODO: binary output + prallel
+const uint64_t RAM = 8*1024*1024;
+const uint64_t BLOCK_SIZE = 1000;
+const std::string FOLDER = "tmp/";
 
-const size_t max_size = 1000;
-std::mutex mut;
-std::condition_variable cond;
-int iter = 0;
 
-void split(std::ifstream& in, size_t size, std::ofstream& out1, std::ofstream& out2, size_t& i)
+struct Compare
 {
-    uint64_t tmp_val;
-
-    while (in.peek() != EOF || i < size)
+    bool operator() (std::pair<uint64_t, int>& left,  std::pair<uint64_t, int>& right)
     {
-        std::unique_lock<std::mutex> lock(mut);
-
-        in.seekg(i*sizeof(uint64_t));
-
-        in.read(reinterpret_cast<char*> (&tmp_val), sizeof(uint64_t));
-
-        if (i < max_size)
-        {
-            out1.write(reinterpret_cast<char*> (&tmp_val), sizeof(uint64_t));
-        }
-        else
-        {
-            out2.write(reinterpret_cast<char*> (&tmp_val), sizeof(uint64_t));
-        }
-        i++;
+        return left.first >= right.first;
     }
-}
+};
 
-void sort (std::string& input_name, size_t size, std::string& output_name)
+bool read_block(std::ifstream& file, uint64_t size, std::vector<uint64_t>& buffer);
+
+bool read_block(std::ifstream& file, uint64_t size, std::vector<uint64_t>& buffer)
 {
-    std::ifstream in(input_name, std::ios::binary | std::ios::in);
-    if(!in)
+    int got = 0;
+    while (got < size && file)
     {
-        throw std::runtime_error("Can't open in file");
-    }
-    std::vector<uint64_t> buff(size);
-
-    for(int i = 0; i < size; i++)
-    {
-        in.seekg(i*sizeof(uint64_t));
-        in.read(reinterpret_cast<char*> (&buff[i]), sizeof(uint64_t));
-    }
-
-    in.close();
-
-    std::sort(buff.begin(), buff.end());
-
-    std::ofstream out(output_name, std::ios::binary | std::ios::out);
-    if(!out)
-    {
-        throw std::runtime_error("Can't open out file");
-    }
-
-    for(int i = 0; i < size; i++)
-    {
-        out.write(reinterpret_cast<char*> (&buff[i]), sizeof(uint64_t));
-    }
-
-    out.close();
-}
-
-void merge_files(std::ifstream& in, std::ofstream& out, std::uint64_t& barrier)
-{
-    uint64_t tmp_val;
-
-    while(true)
-    {
-        std::unique_lock<std::mutex> lock(mut);
-
-        if(in.peek() == EOF)
+        uint64_t tmp = 0;
+        if (file.read(reinterpret_cast<char*> (&tmp), sizeof(uint64_t)))
         {
-            if(barrier != -1)
-            {
-                out.write(reinterpret_cast<char*> (&barrier), sizeof(uint64_t));
-                barrier = -1;
-            }
-            cond.notify_one();
-            break;
-        }
-        in.read(reinterpret_cast<char*> (&tmp_val), sizeof(uint64_t));
-
-        if(tmp_val == barrier) continue;
-
-        if(barrier == -1)
-        {
-            out.write(reinterpret_cast<char*> (&tmp_val), sizeof(uint64_t));
-            continue;
-        }
-
-        if(tmp_val < barrier) out.write(reinterpret_cast<char*> (&tmp_val), sizeof(uint64_t));
-        else
-        {
-            out.write(reinterpret_cast<char*> (&barrier), sizeof(uint64_t));
-            barrier = tmp_val;
-            cond.notify_one();
-            if(barrier == tmp_val) cond.wait(lock);
+            buffer[got] = tmp;
+            ++got;
         }
     }
-}
-
-void merge_sort(std::string& filename)
-{
-    std::cout << iter;
-    size_t size = 0;
-    uint64_t barrier;
-
-    std::string output_name = filename;
-
-    if(iter == 0) output_name = "output.bin";
-    iter++;
-
-    uint64_t tmp_val = 0;
-
-    std::ifstream in(filename, std::ios::binary | std::ios::in);
-
-    while(in.read(reinterpret_cast<char*> (&tmp_val), sizeof(uint64_t)))
-    {
-        size++;
-    }
-
-    if (size <= max_size)
-    {
-        sort(filename, size, output_name);
-    }
-
+    if (file) return true;
     else
     {
-        std::string fn1 = std::to_string(iter) + "1.bin";
-        std::string fn2 = std::to_string(iter) + "2.bin";
-
-        std::ifstream in(filename, std::ios::binary | std::ios::in);
-        std::ofstream out1(fn1, std::ios::binary | std::ios::out);
-        std::ofstream out2(fn2, std::ios::binary | std::ios::out);
-        if(!(in && out1 && out2))
-        {
-            throw std::runtime_error("Error opening files");
-        }
-
-        size_t pos = 0;
-        std::thread thread1(split, std::ref(in), size, std::ref(out1), std::ref(out2), std::ref(pos));
-        std::thread thread2(split, std::ref(in), size, std::ref(out1), std::ref(out2), std::ref(pos));
-
-        thread1.join();
-        thread2.join();
-        in.close();
-        out1.close();
-        out2.close();
-
-        merge_sort(std::ref(fn1));
-        merge_sort(std::ref(fn2));
-
-        std::ifstream in1(fn1, std::ios::binary | std::ios::in);
-        std::ifstream in2(fn2, std::ios::binary | std::ios::in);
-        std::ofstream out(output_name, std::ios::binary | std::ios::out);
-        if(!(in1 && in2 && out))
-        {
-            throw std::runtime_error("Error opening files");
-        }
-
-        in2.read(reinterpret_cast<char*> (&barrier), sizeof(uint64_t));
-        std::thread merge1(merge_files, std::ref(in1), std::ref(out), std::ref(barrier));
-        std::thread merge2(merge_files, std::ref(in2), std::ref(out), std::ref(barrier));
-
-        merge1.join();
-        merge2.join();
-        in1.close();
-        in2.close();
-        out.close();
-
-        const char* file1 = fn1.c_str();
-        const char* file2 = fn2.c_str();
-        std::remove(file1);
-        std::remove(file2);
+        std::cout << "error: only " << file.gcount() << " could be read\n";
+        return false;
     }
+}
+
+
+int make_chuncks (const std::string& in_fname)
+{
+    std::ifstream in (in_fname, std::ifstream::binary);
+    if (!in.is_open())
+    {
+        throw std::runtime_error("Can't open file");
+    }
+    std::vector<uint64_t> buffer(BLOCK_SIZE);
+
+    in.seekg (0, in.end);
+    int length = in.tellg()/sizeof(uint64_t);
+    in.seekg (0, in.beg);
+
+    uint64_t counter = 0;
+    int reading = 0;
+    while (in)
+    {
+        int sz = length - BLOCK_SIZE*counter;
+        if (sz <= 0) break;
+
+        if (sz/BLOCK_SIZE > 0) reading = BLOCK_SIZE;
+        else
+        {
+            reading = sz%BLOCK_SIZE;
+            buffer.resize(reading);
+        }
+
+        bool status = read_block (in, reading, buffer);
+        if (!status) break;
+
+        std::sort(buffer.begin(), buffer.end());
+
+        std::string name = FOLDER +
+                           std::string("out") +
+                           std::to_string(counter) +
+                           std::string(".txt");
+
+        std::ofstream out_file(name);
+        for (const auto &element : buffer)
+        {
+            out_file << element << "\n";
+        }
+
+        ++counter;
+    }
+    return counter;
+}
+
+void external_sort(const int num_of_chunks)
+{
+
+    using Ipair = std::pair <uint64_t, int>;
+    std::priority_queue<Ipair, std::vector<Ipair>, Compare> queue;
+
+    if (num_of_chunks <= 0)
+    {
+        throw std::runtime_error("Invalid chunks number");
+    }
+
+    std::ifstream* in_files = new std::ifstream[num_of_chunks];
+
+    for (size_t i = 0; i < num_of_chunks; ++i)
+    {
+        // in_files[i] = std::make_unique<std::ifstream>(FOLDER
+        std::string in_fname (FOLDER +
+                          std::string("out") +
+                          std::to_string(i) +
+                          std::string(".txt"));
+        in_files[i].open(in_fname);
+        if (!in_files[i])
+        {
+            throw std::runtime_error("couldn't open file");
+        }
+        uint64_t val = 0;
+        in_files[i] >> val;
+
+        std::cout << "val = " << val << '\n';
+        Ipair top (val, i);
+        queue.push(top);
+    }
+
+    std::ofstream out_file("out.txt");
+
+    while (queue.size() > 0)
+    {
+        int next_val = 0;
+
+        Ipair min_pair = queue.top(); // get min
+        queue.pop();
+
+        out_file << min_pair.first << ' ';  // write value to file
+
+        std::flush(out_file);
+
+        if (in_files[min_pair.second] >> next_val)
+	    {
+            Ipair np(next_val, min_pair.second );
+	        queue.push(np);
+	    }
+    }
+
+    for (size_t i = 0; i < num_of_chunks; ++i)
+    {
+        std::string name = FOLDER +
+                           std::string("out") +
+                           std::to_string(i) +
+                           std::string(".txt");
+         std::remove(name.c_str());
+    }
+
+    delete [] in_files;
 }
