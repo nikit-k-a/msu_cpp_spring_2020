@@ -6,20 +6,29 @@
 #include <cassert>
 #include <string>
 
+#include <chrono>
+
+
 void generate_data(uint64_t Size);
 void test_read (const std::string& f_name);
 
 int main ()
 {
-	std::cout << "sz =" << sizeof(uint64_t) << "\n";
-
 	std::cout << "-----Tests--start-----\n";
-	generate_data(10012);
+	generate_data(100012);
 
+	//
+	// int num_chunks = make_chuncks ("data.bin");
+	// external_sort(num_chunks);
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-	// test_read ("data.bin");
-	int num_chunks = make_chuncks ("data.bin");
-	external_sort(num_chunks);
+	parallel_sort ("data.bin");
+
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+	
+	test_read("out.bin");
 	std::cout << "-----Tests--end-------\n";
 
 	return 0;
@@ -27,7 +36,7 @@ int main ()
 
 void test_read (const std::string& f_name)
 {
-	std::ifstream data (f_name, std::ios::in  | std::ios::binary);
+	std::ifstream data (f_name, std::ios::in | std::ios::binary);
 
 	if (data)
 	{
@@ -37,20 +46,22 @@ void test_read (const std::string& f_name)
 		data.seekg (0, data.beg);
 
 		std::cout << "Length = " << length << "\n";
-		// uint64_t * buffer = new char [length];
 		int got = 0;
-		while (got < 10)
+		uint64_t pred = 0;
+		while (got < length/sizeof(uint64_t))
 		{
 			uint64_t tmp = 0;
 			data.read(reinterpret_cast<char*> (&tmp), sizeof(uint64_t));
 			got++;
-			std::cout << "tmp = " << tmp << "\n";
+			assert(pred <= tmp);
+			pred = tmp;
+			// std::cout << "tmp = " << tmp << "\n";
 		}
 
 		if (data)
 			std::cout << "all characters read successfully.\n";
 		else
-			std::cout << "error: only " << data.gcount() << " could be read\n";
+			 std::cout << "error, not everything was read\n";
 			data.close();
 			return;
 
@@ -71,7 +82,8 @@ void generate_data(uint64_t Size)
 
 	for (size_t i = 0; i < Size; i++)
 	{
-		uint64_t tmp = std::rand()%123456;
+		// uint64_t tmp = std::rand()%123456;
+		uint64_t tmp = i;
 		data.write(reinterpret_cast<char*>(&tmp), sizeof(tmp));
 	}
 }
